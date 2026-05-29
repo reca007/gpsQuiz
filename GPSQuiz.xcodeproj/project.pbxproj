@@ -33,6 +33,7 @@
 		001000000000000000000018 /* CourseMapPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001B /* CourseMapPreview.swift */; };
 		001000000000000000000019 /* QRCodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001C /* QRCodeService.swift */; };
 		00100000000000000000001A /* QuizShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001D /* QuizShareView.swift */; };
+		00100000000000000000001B /* BackendConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001E /* BackendConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +66,7 @@
 		00200000000000000000001B /* CourseMapPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseMapPreview.swift; sourceTree = "<group>"; };
 		00200000000000000000001C /* QRCodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeService.swift; sourceTree = "<group>"; };
 		00200000000000000000001D /* QuizShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizShareView.swift; sourceTree = "<group>"; };
+		00200000000000000000001E /* BackendConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +120,7 @@
 				002000000000000000000014 /* TimeFormatter.swift */,
 				002000000000000000000016 /* SampleDataService.swift */,
 				002000000000000000000018 /* AIQuizGenerationService.swift */,
+				00200000000000000000001E /* BackendConfig.swift */,
 				00200000000000000000001A /* CloudQuizService.swift */,
 				00200000000000000000001C /* QRCodeService.swift */,
 			);
@@ -201,11 +204,6 @@
 				TargetAttributes = {
 					005000000000000000000001 = {
 						CreatedOnToolsVersion = 16.0;
-						SystemCapabilities = {
-							com.apple.iCloud = {
-								enabled = 1;
-							};
-						};
 					};
 				};
 			};
@@ -252,6 +250,7 @@
 				001000000000000000000011 /* TimeFormatter.swift in Sources */,
 				001000000000000000000013 /* SampleDataService.swift in Sources */,
 				001000000000000000000015 /* AIQuizGenerationService.swift in Sources */,
+				00100000000000000000001B /* BackendConfig.swift in Sources */,
 				001000000000000000000017 /* CloudQuizService.swift in Sources */,
 				001000000000000000000019 /* QRCodeService.swift in Sources */,
 				001000000000000000000007 /* RootView.swift in Sources */,
@@ -424,7 +423,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = GPSQuiz/GPSQuiz.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";

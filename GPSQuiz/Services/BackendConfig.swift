@@ -15,4 +15,9 @@ enum BackendConfig {
         guard let baseURL else { return nil }
         return baseURL.appending(path: path)
     }
+
+    static func quizShareURL(for quiz: Quiz) -> URL? {
+        guard let baseURL else { return nil }
+        return baseURL.appending(path: "q").appending(path: quiz.id.uuidString)
+    }
 }

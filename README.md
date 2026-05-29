@@ -8,8 +8,11 @@ GPSQuiz ar en SwiftUI-app dar larare kan skapa GPS-baserade quizbanor for skola 
 2. Valj target `GPSQuiz` och en iPhone-simulator.
 3. Tryck Run.
 4. Startsidan ska visa en roterande hero-bild med city, skog och natur.
-5. Oppna ett quiz och valj `Testa banan direkt` for demo utan att ga till GPS-punkterna.
-6. Valj `Visa QR-kod` for att dela quizet med spelare via QR-kod eller lank.
+5. Las upp lararlaget med koden `2468`.
+6. Skapa eller generera ett quiz.
+7. Valj `Publicera quiz till Render`.
+8. Valj `Visa QR-kod` for att dela quizet med spelare via QR-kod eller lank.
+9. Valj `Testa banan direkt` om du vill demo-kora utan att ga till GPS-punkterna.
 
 ## Funktioner
 
@@ -19,12 +22,8 @@ GPSQuiz ar en SwiftUI-app dar larare kan skapa GPS-baserade quizbanor for skola 
 - AI-stod for att skapa skolfragor efter amne, arskurs och tid.
 - Stod for kombinerade amnen: matematik, historia, sprak, natur och anpassade teman.
 - Lag med tva spelare.
-- QR-kod och `gpsquiz://import`-lank for att dela quiz.
+- QR-kod och Render-lank for att dela quiz med spelare.
 - App Intents for genvagar som att starta quiz och visa topplista.
-
-## CloudKit
-
-CloudKit- och iCloud-delning kraver ett betalt Apple Developer-konto for riktig testning pa flera anvandare. Med Personal Team kor appen lokalt i debuglage, sa demo fungerar utan CloudKit.
 
 ## Render-backend for elever
 
@@ -35,7 +34,7 @@ Projektet innehaller en Render-redo backend i `backend/` och en Blueprint-fil i 
 3. Valj `New` -> `Blueprint`.
 4. Koppla GitHub-repot `reca007/gpsQuiz`.
 5. Render hittar `render.yaml` och skapar webbtjansten `gpsquiz-api`.
-6. Kopiera Render-URL:en, till exempel `https://din-tjanst.onrender.com`.
+6. Kopiera Render-URL:en, till exempel `https://gpsquiz-api.onrender.com`.
 7. I Xcode: oppna `GPSQuiz/Resources/Info.plist` och satt `GPSQuizBackendBaseURL` till Render-URL:en.
 8. Kor appen igen.
 
@@ -45,7 +44,11 @@ Nar `GPSQuizBackendBaseURL` ar ifylld anvander appen Render for:
 - gemensam topplista
 - AI-genererade quizfragor
 
-Spelare ansluter fortfarande via QR-kod eller lank fran lararen.
+Efter att lararen har publicerat ett quiz skapar appen elevlankar som:
+
+`https://gpsquiz-api.onrender.com/q/<quiz-id>`
+
+Spelaren oppnar lanken, trycker `Oppna i GPSQuiz` och ansluter som lag.
 
 ## GitHub-test
 

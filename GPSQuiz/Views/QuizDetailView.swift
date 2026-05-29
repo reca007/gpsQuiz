@@ -132,13 +132,13 @@ struct QuizDetailView: View {
             }
 
             if accessMode == .teacher {
-                Section("Moln") {
+                Section("Render") {
                     Button {
                         Task {
                             await cloudQuizService.publish(quiz: quiz)
                         }
                     } label: {
-                        Label("Publicera quiz", systemImage: "icloud.and.arrow.up")
+                        Label("Publicera quiz till Render", systemImage: "network")
                     }
                     .disabled(cloudQuizService.isWorking || checkpoints.isEmpty)
 

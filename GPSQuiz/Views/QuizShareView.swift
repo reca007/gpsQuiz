@@ -5,7 +5,9 @@ struct QuizShareView: View {
     let quiz: Quiz
 
     private var shareURL: URL {
-        SharedQuizPayload.importURL(for: quiz) ?? URL(string: "gpsquiz://quiz/\(quiz.id.uuidString)")!
+        BackendConfig.quizShareURL(for: quiz)
+            ?? SharedQuizPayload.importURL(for: quiz)
+            ?? URL(string: "gpsquiz://quiz/\(quiz.id.uuidString)")!
     }
 
     var body: some View {
@@ -33,7 +35,7 @@ struct QuizShareView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                             .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
 
-                        Text("Spelare skannar QR-koden eller öppnar länken för att importera quizet i GPSQuiz och testa banan på sin enhet.")
+                        Text("Publicera quizet till Render först. Spelare skannar QR-koden eller öppnar länken, trycker Öppna i GPSQuiz och ansluter som lag.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)

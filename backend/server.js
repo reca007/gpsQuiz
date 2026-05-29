@@ -37,6 +37,90 @@ function sendJSON(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function sendHTML(response, status, html) {
+  response.writeHead(status, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
+  response.end(html);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function base64URL(value) {
+  return Buffer.from(JSON.stringify(value), "utf8")
+    .toString("base64")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
+}
+
+function importURLForQuiz(quiz) {
+  const payload = {
+    quizID: quiz.quizID,
+    title: quiz.title,
+    summary: quiz.summary || "",
+    checkpoints: quiz.checkpoints
+  };
+  return `gpsquiz://import?data=${base64URL(payload)}`;
+}
+
+function sharePage({ quiz, requestURL }) {
+  const importURL = importURLForQuiz(quiz);
+  const checkpointCount = Array.isArray(quiz.checkpoints) ? quiz.checkpoints.length : 0;
+  const title = escapeHTML(quiz.title || "GPSQuiz");
+  const summary = escapeHTML(quiz.summary || "Öppna quizet i GPSQuiz-appen.");
+  const canonicalURL = escapeHTML(requestURL.href);
+
+  return `<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title} · GPSQuiz</title>
+  <style>
+    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: linear-gradient(160deg, #eaf3ff, #f7f7fb 48%, #e7f8ef); color: #111827; }
+    main { width: min(92vw, 520px); border-radius: 32px; padding: 28px; background: rgba(255,255,255,.82); box-shadow: 0 24px 70px rgba(15,23,42,.18); backdrop-filter: blur(18px); }
+    .badge { display: inline-flex; gap: 8px; align-items: center; padding: 7px 11px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: 13px; font-weight: 700; }
+    h1 { margin: 22px 0 8px; font-size: clamp(32px, 8vw, 48px); line-height: .96; letter-spacing: 0; }
+    p { color: #4b5563; font-size: 17px; line-height: 1.45; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0; }
+    .pill { padding: 10px 12px; border-radius: 16px; background: #f3f4f6; color: #374151; font-weight: 700; }
+    a.button { display: block; text-align: center; text-decoration: none; color: white; background: #2563eb; padding: 16px 18px; border-radius: 18px; font-size: 18px; font-weight: 800; }
+    .small { font-size: 13px; color: #6b7280; margin-top: 16px; word-break: break-word; }
+    @media (prefers-color-scheme: dark) {
+      body { background: linear-gradient(160deg, #07111f, #111827 48%, #062116); color: #f9fafb; }
+      main { background: rgba(17,24,39,.84); }
+      p, .small { color: #cbd5e1; }
+      .pill { background: rgba(255,255,255,.08); color: #e5e7eb; }
+      .badge { background: rgba(59,130,246,.18); color: #93c5fd; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="badge">GPSQuiz · Elevlänk</div>
+    <h1>${title}</h1>
+    <p>${summary}</p>
+    <div class="meta">
+      <div class="pill">${checkpointCount} checkpoints</div>
+      <div class="pill">Lag om 2</div>
+    </div>
+    <a class="button" href="${escapeHTML(importURL)}">Öppna i GPSQuiz</a>
+    <p class="small">Om inget händer behöver GPSQuiz vara installerad på telefonen. Länk: ${canonicalURL}</p>
+  </main>
+</body>
+</html>`;
+}
+
 async function readJSON(request) {
   const chunks = [];
   for await (const chunk of request) {
@@ -152,9 +236,28 @@ async function route(request, response) {
   }
 
   const url = new URL(request.url, `http://${request.headers.host}`);
+  const publicURL = new URL(request.url, `${request.headers["x-forwarded-proto"] || "https"}://${request.headers.host}`);
+
+  if (request.method === "GET" && url.pathname === "/") {
+    sendHTML(response, 200, `<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GPSQuiz API</title><body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:32px;line-height:1.5"><h1>GPSQuiz API</h1><p>Servern kör. Publicerade elevlänkar finns på <code>/q/&lt;quiz-id&gt;</code>.</p><p><a href="/health">Health check</a></p></body></html>`);
+    return;
+  }
 
   if (request.method === "GET" && url.pathname === "/health") {
     sendJSON(response, 200, { ok: true, service: "gpsquiz-api" });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname.startsWith("/q/")) {
+    const quizID = decodeURIComponent(url.pathname.split("/").pop());
+    const store = await readStore();
+    const quiz = store.quizzes.find((item) => item.quizID === quizID);
+    if (!quiz) {
+      sendHTML(response, 404, `<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Quiz saknas</title><body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:32px;line-height:1.5"><h1>Quizet hittades inte</h1><p>Be läraren publicera quizet till Render igen och skicka en ny länk.</p></body></html>`);
+      return;
+    }
+
+    sendHTML(response, 200, sharePage({ quiz, requestURL: publicURL }));
     return;
   }
 

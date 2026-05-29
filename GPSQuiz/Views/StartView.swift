@@ -247,8 +247,8 @@ private struct StartHeader: View {
             HStack(spacing: 10) {
                 if accessMode == .teacher {
                     CircleIconButton(
-                        systemImage: isWorking ? "icloud.and.arrow.down" : "icloud",
-                        title: "Hämta molnquiz",
+                        systemImage: isWorking ? "arrow.down.circle" : "network",
+                        title: "Hämta Render-quiz",
                         action: importAction
                     )
                     .disabled(isWorking)
@@ -462,9 +462,9 @@ private struct QuickActionStrip: View {
             )
 
             ActionPill(
-                title: "Molnquiz",
+                title: "Render-quiz",
                 subtitle: isWorking ? "Hämtar..." : "Hämta",
-                systemImage: "icloud.and.arrow.down",
+                systemImage: "network",
                 tint: .teal,
                 action: importAction
             )
@@ -594,7 +594,7 @@ private struct StatusBanner: View {
     let message: String
 
     var body: some View {
-        Label(message, systemImage: "icloud")
+        Label(message, systemImage: "network")
             .font(.footnote.weight(.medium))
             .foregroundStyle(.secondary)
             .padding(14)

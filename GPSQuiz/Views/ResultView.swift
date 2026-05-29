@@ -22,7 +22,7 @@ struct ResultView: View {
 
             if let message = leaderboardService.statusMessage {
                 Section {
-                    Label(message, systemImage: leaderboardService.isOffline ? "wifi.slash" : "icloud")
+                    Label(message, systemImage: leaderboardService.isOffline ? "wifi.slash" : "network")
                 }
             }
 
