@@ -22,6 +22,9 @@ struct RootView: View {
             }
             .tag(AppTab.leaderboard)
         }
+        .tint(.blue)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(.regularMaterial, for: .tabBar)
     }
 }
 

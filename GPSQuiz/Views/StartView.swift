@@ -9,97 +9,108 @@ struct StartView: View {
     @State private var showingEditor = false
     @State private var selectedQuiz: Quiz?
     @State private var heroVariant = 0
+    @State private var accessMode: QuizAccessMode = .player
+    @State private var showingTeacherLogin = false
+    @State private var teacherCode = ""
+    @State private var teacherLoginError: String?
+    @AppStorage("gpsquiz.teacherUnlocked") private var isTeacherUnlocked = false
 
     private var activeQuizzes: [Quiz] {
         quizzes.filter(\.isActive)
     }
 
+    private var inactiveQuizzes: [Quiz] {
+        quizzes.filter { !$0.isActive }
+    }
+
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                StartHeader(
+                    accessMode: accessMode,
+                    isWorking: cloudQuizService.isWorking,
+                    importAction: importCloudQuizzes,
+                    createAction: { showingEditor = true }
+                )
+
+                RoleSwitcher(
+                    accessMode: accessMode,
+                    isTeacherUnlocked: isTeacherUnlocked,
+                    selectTeacher: selectTeacherMode,
+                    selectPlayer: { accessMode = .player }
+                )
+
                 StartHeroCard(
                     variant: heroVariant,
+                    accessMode: accessMode,
                     activeCount: activeQuizzes.count,
                     checkpointCount: activeQuizzes.reduce(0) { $0 + $1.checkpoints.count }
                 )
-                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-                .listRowBackground(Color.clear)
-            }
 
-            if activeQuizzes.isEmpty {
-                ContentUnavailableView(
-                    "Inga aktiva quiz",
-                    systemImage: "mappin.slash",
-                    description: Text("Skapa ett quiz och importera många GPS-frågor på en gång.")
-                )
-            } else {
-                Section("Aktiva quiz") {
-                    ForEach(activeQuizzes) { quiz in
-                        NavigationLink(value: quiz) {
-                            QuizRow(quiz: quiz)
-                        }
-                    }
-                    .onDelete(perform: deleteQuiz)
+                if accessMode == .teacher {
+                    QuickActionStrip(
+                        isWorking: cloudQuizService.isWorking,
+                        importAction: importCloudQuizzes,
+                        createAction: { showingEditor = true }
+                    )
+                } else {
+                    PlayerJoinCard()
+                }
+
+                if let message = cloudQuizService.statusMessage {
+                    StatusBanner(message: message)
+                }
+
+                if activeQuizzes.isEmpty {
+                    EmptyQuizState(accessMode: accessMode, createAction: { showingEditor = true })
+                } else {
+                    QuizSection(title: "Aktiva quiz", quizzes: activeQuizzes)
+                }
+
+                if !inactiveQuizzes.isEmpty {
+                    QuizSection(title: "Inaktiva", quizzes: inactiveQuizzes)
                 }
             }
-
-            if !quizzes.filter({ !$0.isActive }).isEmpty {
-                Section("Inaktiva") {
-                    ForEach(quizzes.filter { !$0.isActive }) { quiz in
-                        NavigationLink(value: quiz) {
-                            QuizRow(quiz: quiz)
-                        }
-                    }
-                }
-            }
-
-            if let message = cloudQuizService.statusMessage {
-                Section {
-                    Label(message, systemImage: "icloud")
-                }
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            .padding(.bottom, 110)
         }
-        .navigationTitle("GPSQuiz")
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    Task {
-                        await cloudQuizService.importPublishedQuizzes(
-                            into: modelContext,
-                            existingQuizIDs: Set(quizzes.map(\.id))
-                        )
-                    }
-                } label: {
-                    Image(systemName: cloudQuizService.isWorking ? "icloud.and.arrow.down" : "icloud")
-                }
-                .disabled(cloudQuizService.isWorking)
-                .accessibilityLabel("Hämta molnquiz")
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingEditor = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .accessibilityLabel("Skapa quiz")
-            }
+        .background {
+            LinearGradient(
+                colors: [
+                    Color(.systemGroupedBackground),
+                    Color(.secondarySystemGroupedBackground),
+                    Color(.systemGroupedBackground)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
         }
+        .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: Quiz.self) { quiz in
-            QuizDetailView(quiz: quiz)
+            QuizDetailView(quiz: quiz, accessMode: accessMode)
         }
         .sheet(isPresented: $showingEditor) {
             NavigationStack {
                 QuizEditorView()
             }
         }
+        .sheet(isPresented: $showingTeacherLogin) {
+            TeacherLoginSheet(
+                code: $teacherCode,
+                errorMessage: teacherLoginError,
+                unlockAction: unlockTeacherMode
+            )
+            .presentationDetents([.height(260)])
+        }
         .sheet(item: $selectedQuiz) { quiz in
             NavigationStack {
-                QuizDetailView(quiz: quiz)
+                QuizDetailView(quiz: quiz, accessMode: accessMode)
             }
         }
         .onAppear {
-            SampleDataService.seedIfNeeded(existingQuizzes: quizzes, modelContext: modelContext)
+            seedTeacherDemoIfNeeded()
             heroVariant = Calendar.current.component(.minute, from: .now) % 3
 
             if intentRouter.shouldStartQuiz, let firstQuiz = activeQuizzes.first {
@@ -117,6 +128,11 @@ struct StartView: View {
         .onChange(of: intentRouter.sharedQuizPayload) { _, _ in
             importSharedQuizIfNeeded()
         }
+        .onChange(of: accessMode) { _, newMode in
+            if newMode == .teacher {
+                seedTeacherDemoIfNeeded()
+            }
+        }
         .onReceive(Timer.publish(every: 7, on: .main, in: .common).autoconnect()) { _ in
             withAnimation(.easeInOut(duration: 0.7)) {
                 heroVariant = (heroVariant + 1) % 3
@@ -124,9 +140,41 @@ struct StartView: View {
         }
     }
 
-    private func deleteQuiz(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(activeQuizzes[index])
+    private func importCloudQuizzes() {
+        guard accessMode == .teacher else { return }
+
+        Task {
+            await cloudQuizService.importPublishedQuizzes(
+                into: modelContext,
+                existingQuizIDs: Set(quizzes.map(\.id))
+            )
+        }
+    }
+
+    private func seedTeacherDemoIfNeeded() {
+        guard accessMode == .teacher else { return }
+        SampleDataService.seedIfNeeded(existingQuizzes: quizzes, modelContext: modelContext)
+    }
+
+    private func selectTeacherMode() {
+        if isTeacherUnlocked {
+            accessMode = .teacher
+        } else {
+            teacherCode = ""
+            teacherLoginError = nil
+            showingTeacherLogin = true
+        }
+    }
+
+    private func unlockTeacherMode() {
+        if teacherCode.trimmingCharacters(in: .whitespacesAndNewlines) == "2468" {
+            isTeacherUnlocked = true
+            accessMode = .teacher
+            showingTeacherLogin = false
+            teacherCode = ""
+            teacherLoginError = nil
+        } else {
+            teacherLoginError = "Fel lärarkod."
         }
     }
 
@@ -138,6 +186,7 @@ struct StartView: View {
 
     private func importSharedQuizIfNeeded() {
         guard let payload = intentRouter.sharedQuizPayload else { return }
+        accessMode = .player
 
         let quiz = Quiz(title: payload.title, summary: payload.summary, isActive: true)
         modelContext.insert(quiz)
@@ -174,19 +223,155 @@ struct StartView: View {
     }
 }
 
+private struct StartHeader: View {
+    let accessMode: QuizAccessMode
+    let isWorking: Bool
+    let importAction: () -> Void
+    let createAction: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("GPSQuiz")
+                    .font(.system(size: 34, weight: .semibold, design: .rounded))
+                Text(accessMode == .teacher ? "Skapa banor och dela dem med spelare." : "Anslut till lärarens bana och starta som lag.")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 10) {
+                if accessMode == .teacher {
+                    CircleIconButton(
+                        systemImage: isWorking ? "icloud.and.arrow.down" : "icloud",
+                        title: "Hämta molnquiz",
+                        action: importAction
+                    )
+                    .disabled(isWorking)
+
+                    CircleIconButton(
+                        systemImage: "plus",
+                        title: "Skapa quiz",
+                        action: createAction
+                    )
+                } else {
+                    Image(systemName: "person.2.badge.key.fill")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.blue)
+                        .frame(width: 46, height: 46)
+                        .background(.regularMaterial, in: Circle())
+                }
+            }
+        }
+    }
+}
+
+private struct RoleSwitcher: View {
+    let accessMode: QuizAccessMode
+    let isTeacherUnlocked: Bool
+    let selectTeacher: () -> Void
+    let selectPlayer: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            RoleButton(
+                title: "Spelare",
+                systemImage: "person.2.fill",
+                isSelected: accessMode == .player,
+                action: selectPlayer
+            )
+
+            RoleButton(
+                title: isTeacherUnlocked ? "Lärare" : "Lärare låst",
+                systemImage: isTeacherUnlocked ? "graduationcap.fill" : "lock.fill",
+                isSelected: accessMode == .teacher,
+                action: selectTeacher
+            )
+        }
+        .padding(4)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct RoleButton: View {
+    let title: String
+    let systemImage: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .foregroundStyle(isSelected ? .white : .primary)
+                .background {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(.blue)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct TeacherLoginSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var code: String
+    let errorMessage: String?
+    let unlockAction: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    SecureField("Lärarkod", text: $code)
+                        .keyboardType(.numberPad)
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
+                } footer: {
+                    Text("Demo-kod: 2468. Spelare behöver inte koden och kan bara ansluta till quizrundan.")
+                }
+            }
+            .navigationTitle("Lås upp lärarläge")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Avbryt") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Lås upp", action: unlockAction)
+                        .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
+
 private struct StartHeroCard: View {
     let variant: Int
+    let accessMode: QuizAccessMode
     let activeCount: Int
     let checkpointCount: Int
 
-    private var hero: (imageName: String, label: String) {
+    private var hero: (imageName: String, label: String, subtitle: String) {
         switch variant {
         case 0:
-            ("CityPromenadeHero", "Citypromenad")
+            ("CityPromenadeHero", "Citypromenad", "Uppdrag genom stadsmiljö")
         case 1:
-            ("ForestTrailHero", "Skogsbana")
+            ("ForestTrailHero", "Skogsbana", "Frågor längs stig och skog")
         default:
-            ("NatureAdventureHero", "Naturbana")
+            ("NatureAdventureHero", "Naturbana", "Utforska platsen med laget")
         }
     }
 
@@ -195,216 +380,249 @@ private struct StartHeroCard: View {
             Image(hero.imageName)
                 .resizable()
                 .scaledToFill()
+                .frame(maxWidth: .infinity)
                 .transition(.opacity)
 
             LinearGradient(
-                colors: [.black.opacity(0.0), .black.opacity(0.62)],
+                colors: [
+                    .black.opacity(0.00),
+                    .black.opacity(0.18),
+                    .black.opacity(0.76)
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 14) {
                 Label(hero.label, systemImage: "location.north.line.fill")
-                    .font(.caption.bold())
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
                     .background(.ultraThinMaterial, in: Capsule())
 
-                Text("GPSQuiz")
-                    .font(.largeTitle.bold())
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(hero.subtitle)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .lineLimit(2)
 
-                Text("\(activeCount) aktiva quiz · \(checkpointCount) checkpoints")
-                    .font(.subheadline.weight(.medium))
+                    Text(accessMode == .teacher ? "\(activeCount) aktiva quiz · \(checkpointCount) checkpoints" : "Skanna QR-koden från läraren och anslut till rundan.")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.78))
+                        .lineLimit(2)
+                }
             }
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
-            .padding(20)
+            .shadow(color: .black.opacity(0.35), radius: 10, y: 4)
+            .padding(24)
         }
-        .frame(height: 230)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .frame(height: 430)
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(.white.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .stroke(.white.opacity(0.26), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.16), radius: 18, y: 8)
+        .shadow(color: .black.opacity(0.18), radius: 24, y: 14)
     }
 }
 
-private struct CityPromenadeHero: View {
+private struct PlayerJoinCard: View {
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.48, green: 0.74, blue: 0.88),
-                    Color(red: 0.98, green: 0.86, blue: 0.66)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Spelarläge", systemImage: "qrcode.viewfinder")
+                .font(.headline.weight(.semibold))
+
+            Text("Spelare kan inte skapa, ändra eller se frågorna i förväg. De ansluter via lärarens QR-kod eller länk och fyller i två spelare i laget.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+}
+
+private struct QuickActionStrip: View {
+    let isWorking: Bool
+    let importAction: () -> Void
+    let createAction: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ActionPill(
+                title: "Ny bana",
+                subtitle: "AI eller egen",
+                systemImage: "sparkles",
+                tint: .blue,
+                action: createAction
             )
 
-            VStack(spacing: 0) {
-                HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(0..<9) { index in
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(cityBuildingColor(index))
-                            .frame(width: CGFloat(36 + (index % 3) * 12), height: CGFloat(72 + (index % 5) * 18))
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .padding(.horizontal, 16)
-
-                ZStack(alignment: .top) {
-                    Color(red: 0.74, green: 0.63, blue: 0.44)
-                    Color(red: 0.17, green: 0.45, blue: 0.62)
-                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 80, topTrailingRadius: 0))
-                        .offset(y: 36)
-                }
-                .frame(height: 95)
-            }
-
-            RouteOverlay(points: [
-                CGPoint(x: 0.12, y: 0.77),
-                CGPoint(x: 0.30, y: 0.65),
-                CGPoint(x: 0.48, y: 0.72),
-                CGPoint(x: 0.64, y: 0.58),
-                CGPoint(x: 0.83, y: 0.64)
-            ])
-        }
-    }
-
-    private func cityBuildingColor(_ index: Int) -> Color {
-        [
-            Color(red: 0.83, green: 0.39, blue: 0.31),
-            Color(red: 0.90, green: 0.65, blue: 0.32),
-            Color(red: 0.62, green: 0.34, blue: 0.42),
-            Color(red: 0.48, green: 0.63, blue: 0.62)
-        ][index % 4]
-    }
-}
-
-private struct ForestTrailHero: View {
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.62, green: 0.80, blue: 0.68),
-                    Color(red: 0.12, green: 0.32, blue: 0.20)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+            ActionPill(
+                title: "Molnquiz",
+                subtitle: isWorking ? "Hämtar..." : "Hämta",
+                systemImage: "icloud.and.arrow.down",
+                tint: .teal,
+                action: importAction
             )
-
-            HStack(alignment: .bottom, spacing: 14) {
-                ForEach(0..<13) { index in
-                    VStack(spacing: -18) {
-                        Triangle()
-                            .fill(Color(red: 0.13, green: 0.38, blue: 0.21).opacity(0.72))
-                            .frame(width: CGFloat(58 + (index % 4) * 10), height: CGFloat(82 + (index % 5) * 8))
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(Color(red: 0.20, green: 0.22, blue: 0.12).opacity(0.65))
-                            .frame(width: 10, height: CGFloat(110 + (index % 6) * 18))
-                    }
-                }
-            }
-            .padding(.horizontal, -20)
-
-            TrailShape()
-                .fill(Color(red: 0.66, green: 0.52, blue: 0.32).opacity(0.95))
-
-            RouteOverlay(points: [
-                CGPoint(x: 0.47, y: 0.82),
-                CGPoint(x: 0.53, y: 0.65),
-                CGPoint(x: 0.51, y: 0.49),
-                CGPoint(x: 0.56, y: 0.34)
-            ])
+            .disabled(isWorking)
         }
     }
 }
 
-private struct RouteOverlay: View {
-    let points: [CGPoint]
+private struct QuizSection: View {
+    let title: String
+    let quizzes: [Quiz]
 
     var body: some View {
-        GeometryReader { geometry in
-            let resolved = points.map {
-                CGPoint(x: $0.x * geometry.size.width, y: $0.y * geometry.size.height)
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline.weight(.semibold))
 
-            Path { path in
-                guard let first = resolved.first else { return }
-                path.move(to: first)
-                for point in resolved.dropFirst() {
-                    path.addLine(to: point)
+            ForEach(quizzes) { quiz in
+                NavigationLink(value: quiz) {
+                    QuizCard(quiz: quiz)
                 }
-            }
-            .stroke(Color.blue.opacity(0.86), style: StrokeStyle(lineWidth: 11, lineCap: .round, lineJoin: .round))
-
-            Path { path in
-                guard let first = resolved.first else { return }
-                path.move(to: first)
-                for point in resolved.dropFirst() {
-                    path.addLine(to: point)
-                }
-            }
-            .stroke(.white.opacity(0.58), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-
-            ForEach(Array(resolved.enumerated()), id: \.offset) { _, point in
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 34, height: 34)
-                    .overlay {
-                        Circle()
-                            .fill(.white.opacity(0.9))
-                            .frame(width: 13, height: 13)
-                    }
-                    .position(point)
+                .buttonStyle(.plain)
             }
         }
     }
 }
 
-private struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
-    }
-}
-
-private struct TrailShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.width * 0.40, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.width * 0.62, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.width * 0.55, y: rect.height * 0.58))
-        path.addLine(to: CGPoint(x: rect.width * 0.58, y: rect.height * 0.35))
-        path.addLine(to: CGPoint(x: rect.width * 0.48, y: rect.height * 0.45))
-        path.closeSubpath()
-        return path
-    }
-}
-
-private struct QuizRow: View {
+private struct QuizCard: View {
     let quiz: Quiz
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(quiz.title)
-                .font(.headline)
-            if !quiz.summary.isEmpty {
-                Text(quiz.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(.blue.opacity(0.14))
+                Image(systemName: "map.fill")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.blue)
             }
-            Label("\(quiz.checkpoints.count) checkpoints", systemImage: "mappin.and.ellipse")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            .frame(width: 48, height: 48)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(quiz.title)
+                    .font(.headline.weight(.semibold))
+                    .lineLimit(2)
+
+                if !quiz.summary.isEmpty {
+                    Text(quiz.summary)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Label("\(quiz.checkpoints.count) checkpoints", systemImage: "mappin.and.ellipse")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "chevron.right")
+                .font(.footnote.bold())
+                .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 4)
+        .padding(16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.45), lineWidth: 1)
+        }
+    }
+}
+
+private struct ActionPill: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let tint: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: systemImage)
+                    .font(.headline.bold())
+                    .frame(width: 38, height: 38)
+                    .background(tint.opacity(0.14), in: Circle())
+                    .foregroundStyle(tint)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.bold())
+                    Text(subtitle)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct CircleIconButton: View {
+    let systemImage: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.headline.weight(.semibold))
+                .frame(width: 46, height: 46)
+                .background(.regularMaterial, in: Circle())
+                .shadow(color: .black.opacity(0.10), radius: 10, y: 5)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+    }
+}
+
+private struct StatusBanner: View {
+    let message: String
+
+    var body: some View {
+        Label(message, systemImage: "icloud")
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct EmptyQuizState: View {
+    let accessMode: QuizAccessMode
+    let createAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(accessMode == .teacher ? "Inga aktiva quiz" : "Ingen bana ansluten", systemImage: "mappin.slash")
+                .font(.headline)
+
+            Text(accessMode == .teacher ? "Skapa ett quiz och importera många GPS-frågor på en gång." : "Be läraren visa QR-koden eller dela länken till quizrundan.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            if accessMode == .teacher {
+                Button(action: createAction) {
+                    Label("Skapa första banan", systemImage: "plus")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(18)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 

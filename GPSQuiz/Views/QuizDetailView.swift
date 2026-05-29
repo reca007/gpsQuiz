@@ -1,10 +1,27 @@
 import SwiftData
 import SwiftUI
 
+enum QuizAccessMode: String, CaseIterable, Identifiable {
+    case teacher
+    case player
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .teacher:
+            "Lärare"
+        case .player:
+            "Spelare"
+        }
+    }
+}
+
 struct QuizDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var cloudQuizService: CloudQuizService
     let quiz: Quiz
+    let accessMode: QuizAccessMode
 
     @State private var teamName = ""
     @State private var playerOneName = ""
@@ -46,45 +63,53 @@ struct QuizDetailView: View {
                         Text(quiz.summary)
                             .foregroundStyle(.secondary)
                     }
-                    Toggle(
-                        "Aktivt quiz",
-                        isOn: Binding(
-                            get: { quiz.isActive },
-                            set: { newValue in
-                                quiz.isActive = newValue
-                                quiz.updatedAt = .now
-                                try? modelContext.save()
-                            }
+                    if accessMode == .teacher {
+                        Toggle(
+                            "Aktivt quiz",
+                            isOn: Binding(
+                                get: { quiz.isActive },
+                                set: { newValue in
+                                    quiz.isActive = newValue
+                                    quiz.updatedAt = .now
+                                    try? modelContext.save()
+                                }
+                            )
                         )
-                    )
+                    } else {
+                        Label("Anslut som lag och starta rundan när läraren säger till.", systemImage: "person.2.fill")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            if checkpoints.isEmpty {
-                Section("Dela och testa") {
-                    ContentUnavailableView(
-                        "Lägg till frågor först",
-                        systemImage: "mappin.slash",
-                        description: Text("Generera en AI-bana eller importera frågor innan banan kan testas eller delas med QR-kod.")
-                    )
-                }
-            } else {
-                Section("Dela och testa") {
-                    Button {
-                        startQuickTestRound()
-                    } label: {
-                        Label("Testa banan direkt", systemImage: "play.circle.fill")
+            if accessMode == .teacher {
+                if checkpoints.isEmpty {
+                    Section("Dela och testa") {
+                        ContentUnavailableView(
+                            "Lägg till frågor först",
+                            systemImage: "mappin.slash",
+                            description: Text("Generera en AI-bana eller importera frågor innan banan kan testas eller delas med QR-kod.")
+                        )
                     }
+                } else {
+                    Section("Dela och testa") {
+                        Button {
+                            startQuickTestRound()
+                        } label: {
+                            Label("Testa banan direkt", systemImage: "play.circle.fill")
+                        }
 
-                    Button {
-                        showingShareSheet = true
-                    } label: {
-                        Label("Visa QR-kod", systemImage: "qrcode")
+                        Button {
+                            showingShareSheet = true
+                        } label: {
+                            Label("Visa QR-kod för spelare", systemImage: "qrcode")
+                        }
+
+                        Text("Spelare ska ansluta via QR-kod eller länk. De kan inte skapa eller ändra frågor.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
-
-                    Text("Snabbtest skapar ett tillfälligt testlag om du inte fyllt i spelarnamn ännu.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -97,39 +122,47 @@ struct QuizDetailView: View {
                     .textContentType(.name)
             }
 
-            Section("Starta runda") {
+            Section(accessMode == .teacher ? "Starta testrunda" : "Anslut till runda") {
                 Button {
                     startRound()
                 } label: {
-                    Label("Starta som lag", systemImage: "person.2.fill")
+                    Label(accessMode == .teacher ? "Starta som testlag" : "Starta som lag", systemImage: "person.2.fill")
                 }
                 .disabled(!canStartRound || checkpoints.isEmpty)
             }
 
-            Section("Moln") {
-                Button {
-                    Task {
-                        await cloudQuizService.publish(quiz: quiz)
+            if accessMode == .teacher {
+                Section("Moln") {
+                    Button {
+                        Task {
+                            await cloudQuizService.publish(quiz: quiz)
+                        }
+                    } label: {
+                        Label("Publicera quiz", systemImage: "icloud.and.arrow.up")
                     }
-                } label: {
-                    Label("Publicera quiz", systemImage: "icloud.and.arrow.up")
-                }
-                .disabled(cloudQuizService.isWorking || checkpoints.isEmpty)
+                    .disabled(cloudQuizService.isWorking || checkpoints.isEmpty)
 
-                if let message = cloudQuizService.statusMessage {
-                    Text(message)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    if let message = cloudQuizService.statusMessage {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            Section("Checkpoints") {
+            Section(accessMode == .teacher ? "Checkpoints" : "Banan") {
                 ForEach(checkpoints) { checkpoint in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(checkpoint.name)
                             .font(.headline)
-                        Text(checkpoint.question)
-                            .foregroundStyle(.secondary)
+                        if accessMode == .teacher {
+                            Text(checkpoint.question)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Frågan låses upp automatiskt när laget är nära platsen.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                         Label("\(Int(checkpoint.activationRadiusMeters)) m aktiveringsradie", systemImage: "scope")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -138,25 +171,27 @@ struct QuizDetailView: View {
                 }
             }
         }
-        .navigationTitle("Quizdetaljer")
+        .navigationTitle(accessMode == .teacher ? "Lärarvy" : "Spelarvy")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        showingAIGenerator = true
-                    } label: {
-                        Label("Generera AI-bana", systemImage: "sparkles")
-                    }
+            if accessMode == .teacher {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showingAIGenerator = true
+                        } label: {
+                            Label("Generera AI-bana", systemImage: "sparkles")
+                        }
 
-                    Button {
-                        showingImport = true
+                        Button {
+                            showingImport = true
+                        } label: {
+                            Label("Importera frågor", systemImage: "square.and.arrow.down")
+                        }
                     } label: {
-                        Label("Importera frågor", systemImage: "square.and.arrow.down")
+                        Image(systemName: "plus")
                     }
-                } label: {
-                    Image(systemName: "plus")
+                    .accessibilityLabel("Lägg till frågor")
                 }
-                .accessibilityLabel("Lägg till frågor")
             }
         }
         .navigationDestination(item: $roundToStart) { round in
