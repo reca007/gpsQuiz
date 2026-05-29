@@ -50,6 +50,20 @@ Efter att lararen har publicerat ett quiz skapar appen elevlankar som:
 
 Spelaren oppnar lanken, trycker `Oppna i GPSQuiz` och ansluter som lag.
 
+## Installationslank for elever
+
+Render-lanken installerar inte iOS-appen automatiskt. Eleverna maste forst ha GPSQuiz installerad via Xcode, TestFlight eller App Store.
+
+For klassdemo med TestFlight:
+
+1. Skapa en TestFlight-lank i App Store Connect.
+2. Oppna Render -> `gpsquiz-api` -> `Environment`.
+3. Lagg till miljo-variabeln `APP_INSTALL_URL`.
+4. Satt vardet till TestFlight-lanken.
+5. Deploya om Render-tjansten.
+
+Da visar elevsidan bade `Oppna i GPSQuiz` och `Installera GPSQuiz`.
+
 ## GitHub-test
 
 Repo:t har en GitHub Actions-check som bygger appen vid varje push till `main`. Den syns under fliken `Actions` pa GitHub.

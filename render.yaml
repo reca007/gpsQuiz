@@ -9,3 +9,5 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: APP_INSTALL_URL
+        sync: false

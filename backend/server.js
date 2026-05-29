@@ -7,6 +7,7 @@ import crypto from "node:crypto";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const DATA_FILE = process.env.DATA_FILE || join(__dirname, "data", "store.json");
+const APP_INSTALL_URL = process.env.APP_INSTALL_URL || process.env.TESTFLIGHT_URL || "";
 
 const defaultStore = {
   quizzes: [],
@@ -78,6 +79,10 @@ function sharePage({ quiz, requestURL }) {
   const title = escapeHTML(quiz.title || "GPSQuiz");
   const summary = escapeHTML(quiz.summary || "Öppna quizet i GPSQuiz-appen.");
   const canonicalURL = escapeHTML(requestURL.href);
+  const installURL = escapeHTML(APP_INSTALL_URL);
+  const installButton = installURL
+    ? `<a class="button secondary" href="${installURL}">Installera GPSQuiz</a>`
+    : "";
 
   return `<!doctype html>
 <html lang="sv">
@@ -95,6 +100,7 @@ function sharePage({ quiz, requestURL }) {
     .meta { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0; }
     .pill { padding: 10px 12px; border-radius: 16px; background: #f3f4f6; color: #374151; font-weight: 700; }
     a.button { display: block; text-align: center; text-decoration: none; color: white; background: #2563eb; padding: 16px 18px; border-radius: 18px; font-size: 18px; font-weight: 800; }
+    a.button.secondary { margin-top: 10px; color: #1f2937; background: #e5e7eb; }
     .small { font-size: 13px; color: #6b7280; margin-top: 16px; word-break: break-word; }
     @media (prefers-color-scheme: dark) {
       body { background: linear-gradient(160deg, #07111f, #111827 48%, #062116); color: #f9fafb; }
@@ -102,6 +108,7 @@ function sharePage({ quiz, requestURL }) {
       p, .small { color: #cbd5e1; }
       .pill { background: rgba(255,255,255,.08); color: #e5e7eb; }
       .badge { background: rgba(59,130,246,.18); color: #93c5fd; }
+      a.button.secondary { color: #f9fafb; background: rgba(255,255,255,.14); }
     }
   </style>
 </head>
@@ -115,7 +122,8 @@ function sharePage({ quiz, requestURL }) {
       <div class="pill">Lag om 2</div>
     </div>
     <a class="button" href="${escapeHTML(importURL)}">Öppna i GPSQuiz</a>
-    <p class="small">Om inget händer behöver GPSQuiz vara installerad på telefonen. Länk: ${canonicalURL}</p>
+    ${installButton}
+    <p class="small">Om inget händer behöver GPSQuiz vara installerad först. Läraren delar installationslänken via TestFlight. Quizlänk: ${canonicalURL}</p>
   </main>
 </body>
 </html>`;
