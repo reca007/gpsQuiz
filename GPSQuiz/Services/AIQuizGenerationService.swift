@@ -29,7 +29,7 @@ enum AIQuizGenerationService {
     private static var aiEndpointURL: URL? {
         guard let value = Bundle.main.object(forInfoDictionaryKey: "GPSQuizAIEndpointURL") as? String,
               !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
+            return BackendConfig.url("api/ai/generate")
         }
         return URL(string: value)
     }

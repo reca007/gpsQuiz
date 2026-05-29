@@ -189,6 +189,9 @@ struct StartView: View {
         accessMode = .player
 
         let quiz = Quiz(title: payload.title, summary: payload.summary, isActive: true)
+        if let quizID = payload.quizID {
+            quiz.id = quizID
+        }
         modelContext.insert(quiz)
 
         for (checkpointIndex, checkpointPayload) in payload.checkpoints.enumerated() {

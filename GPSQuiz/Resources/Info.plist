@@ -33,6 +33,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GPSQuizAIEndpointURL</key>
 	<string></string>
+	<key>GPSQuizBackendBaseURL</key>
+	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>GPSQuiz använder din plats för att låsa upp frågor när du är nära rätt checkpoint.</string>
 	<key>UIApplicationSceneManifest</key>

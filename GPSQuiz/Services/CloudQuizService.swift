@@ -12,6 +12,11 @@ final class CloudQuizService: ObservableObject {
     private let checkpointRecordType = "CloudCheckpoint"
 
     func publish(quiz: Quiz) async {
+        if let backendURL = BackendConfig.url("api/quizzes") {
+            await publishWithBackend(quiz: quiz, endpoint: backendURL)
+            return
+        }
+
         guard let database = cloudDatabase else {
             statusMessage = "Molnpublicering kräver ett betalt Apple Developer-konto. Quizet är kvar lokalt."
             return
@@ -49,6 +54,11 @@ final class CloudQuizService: ObservableObject {
     }
 
     func importPublishedQuizzes(into modelContext: ModelContext, existingQuizIDs: Set<UUID>) async {
+        if let backendURL = BackendConfig.url("api/quizzes") {
+            await importWithBackend(endpoint: backendURL, into: modelContext, existingQuizIDs: existingQuizIDs)
+            return
+        }
+
         guard let database = cloudDatabase else {
             statusMessage = "Molnhämtning kräver ett betalt Apple Developer-konto."
             return
@@ -84,6 +94,87 @@ final class CloudQuizService: ObservableObject {
             statusMessage = importedCount == 0 ? "Inga nya molnquiz hittades." : "\(importedCount) quiz hämtades från molnet."
         } catch {
             statusMessage = "Kunde inte hämta molnquiz: \(error.localizedDescription)"
+        }
+    }
+
+    private func publishWithBackend(quiz: Quiz, endpoint: URL) async {
+        isWorking = true
+        defer { isWorking = false }
+
+        do {
+            var request = URLRequest(url: endpoint)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONEncoder().encode(SharedQuizPayload(quiz: quiz))
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, 200..<300 ~= httpResponse.statusCode else {
+                throw BackendError.unavailable
+            }
+
+            statusMessage = "Quizet är publicerat till Render."
+        } catch {
+            statusMessage = "Kunde inte publicera till Render: \(error.localizedDescription)"
+        }
+    }
+
+    private func importWithBackend(endpoint: URL, into modelContext: ModelContext, existingQuizIDs: Set<UUID>) async {
+        isWorking = true
+        defer { isWorking = false }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(from: endpoint)
+            guard let httpResponse = response as? HTTPURLResponse, 200..<300 ~= httpResponse.statusCode else {
+                throw BackendError.unavailable
+            }
+
+            let payload = try JSONDecoder().decode(BackendQuizList.self, from: data)
+            var importedCount = 0
+
+            for sharedQuiz in payload.quizzes {
+                if let quizID = sharedQuiz.quizID, existingQuizIDs.contains(quizID) {
+                    continue
+                }
+
+                let quiz = Quiz(title: sharedQuiz.title, summary: sharedQuiz.summary, isActive: true)
+                if let quizID = sharedQuiz.quizID {
+                    quiz.id = quizID
+                }
+                appendSharedCheckpoints(sharedQuiz.checkpoints, to: quiz)
+                modelContext.insert(quiz)
+                importedCount += 1
+            }
+
+            try modelContext.save()
+            statusMessage = importedCount == 0 ? "Inga nya Render-quiz hittades." : "\(importedCount) quiz hämtades från Render."
+        } catch {
+            statusMessage = "Kunde inte hämta från Render: \(error.localizedDescription)"
+        }
+    }
+
+    private func appendSharedCheckpoints(_ checkpoints: [SharedCheckpointPayload], to quiz: Quiz) {
+        for (checkpointIndex, checkpointPayload) in checkpoints.enumerated() {
+            let checkpoint = Checkpoint(
+                name: checkpointPayload.name,
+                latitude: checkpointPayload.latitude,
+                longitude: checkpointPayload.longitude,
+                activationRadiusMeters: checkpointPayload.radius,
+                question: checkpointPayload.question,
+                sortIndex: checkpointIndex
+            )
+            checkpoint.quiz = quiz
+
+            for (optionIndex, optionPayload) in checkpointPayload.options.enumerated() {
+                let option = AnswerOption(
+                    text: optionPayload.text,
+                    sortIndex: optionIndex,
+                    isCorrect: optionPayload.isCorrect
+                )
+                option.checkpoint = checkpoint
+                checkpoint.options.append(option)
+            }
+
+            quiz.checkpoints.append(checkpoint)
         }
     }
 
@@ -138,5 +229,17 @@ final class CloudQuizService: ObservableObject {
         #else
         CKContainer.default().publicCloudDatabase
         #endif
+    }
+}
+
+private struct BackendQuizList: Decodable {
+    let quizzes: [SharedQuizPayload]
+}
+
+private enum BackendError: LocalizedError {
+    case unavailable
+
+    var errorDescription: String? {
+        "Servern svarade inte korrekt."
     }
 }

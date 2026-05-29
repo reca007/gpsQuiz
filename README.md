@@ -26,6 +26,27 @@ GPSQuiz ar en SwiftUI-app dar larare kan skapa GPS-baserade quizbanor for skola 
 
 CloudKit- och iCloud-delning kraver ett betalt Apple Developer-konto for riktig testning pa flera anvandare. Med Personal Team kor appen lokalt i debuglage, sa demo fungerar utan CloudKit.
 
+## Render-backend for elever
+
+Projektet innehaller en Render-redo backend i `backend/` och en Blueprint-fil i `render.yaml`.
+
+1. Pusha projektet till GitHub.
+2. Logga in pa Render.
+3. Valj `New` -> `Blueprint`.
+4. Koppla GitHub-repot `reca007/gpsQuiz`.
+5. Render hittar `render.yaml` och skapar webbtjansten `gpsquiz-api`.
+6. Kopiera Render-URL:en, till exempel `https://din-tjanst.onrender.com`.
+7. I Xcode: oppna `GPSQuiz/Resources/Info.plist` och satt `GPSQuizBackendBaseURL` till Render-URL:en.
+8. Kor appen igen.
+
+Nar `GPSQuizBackendBaseURL` ar ifylld anvander appen Render for:
+
+- publicerade quiz
+- gemensam topplista
+- AI-genererade quizfragor
+
+Spelare ansluter fortfarande via QR-kod eller lank fran lararen.
+
 ## GitHub-test
 
 Repo:t har en GitHub Actions-check som bygger appen vid varje push till `main`. Den syns under fliken `Actions` pa GitHub.

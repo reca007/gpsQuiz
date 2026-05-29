@@ -52,11 +52,13 @@ final class IntentRouter: ObservableObject {
 }
 
 struct SharedQuizPayload: Codable, Equatable {
+    var quizID: UUID?
     var title: String
     var summary: String
     var checkpoints: [SharedCheckpointPayload]
 
     init(quiz: Quiz) {
+        quizID = quiz.id
         title = quiz.title
         summary = quiz.summary
         checkpoints = quiz.checkpoints
