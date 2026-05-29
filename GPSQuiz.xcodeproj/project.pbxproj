@@ -1,0 +1,476 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		001000000000000000000001 /* GPSQuizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000001 /* GPSQuizApp.swift */; };
+		001000000000000000000002 /* QuizModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000002 /* QuizModels.swift */; };
+		001000000000000000000003 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000003 /* AppRoute.swift */; };
+		001000000000000000000004 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000004 /* LocationService.swift */; };
+		001000000000000000000005 /* LeaderboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000005 /* LeaderboardService.swift */; };
+		001000000000000000000006 /* CheckpointImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000006 /* CheckpointImportService.swift */; };
+		001000000000000000000007 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000007 /* RootView.swift */; };
+		001000000000000000000008 /* StartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000008 /* StartView.swift */; };
+		001000000000000000000009 /* QuizEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000009 /* QuizEditorView.swift */; };
+		00100000000000000000000A /* QuizDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000A /* QuizDetailView.swift */; };
+		00100000000000000000000B /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000B /* GameView.swift */; };
+		00100000000000000000000C /* QuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000C /* QuestionView.swift */; };
+		00100000000000000000000D /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000D /* ResultView.swift */; };
+		00100000000000000000000E /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000E /* LeaderboardView.swift */; };
+		00100000000000000000000F /* GPSQuizIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000000F /* GPSQuizIntents.swift */; };
+		001000000000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000010 /* Assets.xcassets */; };
+		001000000000000000000011 /* TimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000014 /* TimeFormatter.swift */; };
+		001000000000000000000012 /* CheckpointImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000015 /* CheckpointImportView.swift */; };
+		001000000000000000000013 /* SampleDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000016 /* SampleDataService.swift */; };
+		001000000000000000000014 /* PreviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000017 /* PreviewSupport.swift */; };
+		001000000000000000000015 /* AIQuizGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000018 /* AIQuizGenerationService.swift */; };
+		001000000000000000000016 /* AIQuizGeneratorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000000000000000019 /* AIQuizGeneratorView.swift */; };
+		001000000000000000000017 /* CloudQuizService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001A /* CloudQuizService.swift */; };
+		001000000000000000000018 /* CourseMapPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001B /* CourseMapPreview.swift */; };
+		001000000000000000000019 /* QRCodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001C /* QRCodeService.swift */; };
+		00100000000000000000001A /* QuizShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00200000000000000000001D /* QuizShareView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		002000000000000000000001 /* GPSQuizApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSQuizApp.swift; sourceTree = "<group>"; };
+		002000000000000000000002 /* QuizModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizModels.swift; sourceTree = "<group>"; };
+		002000000000000000000003 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		002000000000000000000004 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		002000000000000000000005 /* LeaderboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardService.swift; sourceTree = "<group>"; };
+		002000000000000000000006 /* CheckpointImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckpointImportService.swift; sourceTree = "<group>"; };
+		002000000000000000000007 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		002000000000000000000008 /* StartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartView.swift; sourceTree = "<group>"; };
+		002000000000000000000009 /* QuizEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizEditorView.swift; sourceTree = "<group>"; };
+		00200000000000000000000A /* QuizDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizDetailView.swift; sourceTree = "<group>"; };
+		00200000000000000000000B /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		00200000000000000000000C /* QuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionView.swift; sourceTree = "<group>"; };
+		00200000000000000000000D /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		00200000000000000000000E /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
+		00200000000000000000000F /* GPSQuizIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSQuizIntents.swift; sourceTree = "<group>"; };
+		002000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		002000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		002000000000000000000012 /* GPSQuiz.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GPSQuiz.entitlements; sourceTree = "<group>"; };
+		002000000000000000000013 /* GPSQuiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GPSQuiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		002000000000000000000014 /* TimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFormatter.swift; sourceTree = "<group>"; };
+		002000000000000000000015 /* CheckpointImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckpointImportView.swift; sourceTree = "<group>"; };
+		002000000000000000000016 /* SampleDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataService.swift; sourceTree = "<group>"; };
+		002000000000000000000017 /* PreviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSupport.swift; sourceTree = "<group>"; };
+		002000000000000000000018 /* AIQuizGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIQuizGenerationService.swift; sourceTree = "<group>"; };
+		002000000000000000000019 /* AIQuizGeneratorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIQuizGeneratorView.swift; sourceTree = "<group>"; };
+		00200000000000000000001A /* CloudQuizService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudQuizService.swift; sourceTree = "<group>"; };
+		00200000000000000000001B /* CourseMapPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseMapPreview.swift; sourceTree = "<group>"; };
+		00200000000000000000001C /* QRCodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeService.swift; sourceTree = "<group>"; };
+		00200000000000000000001D /* QuizShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizShareView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		003000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		004000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				004000000000000000000002 /* GPSQuiz */,
+				004000000000000000000008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		004000000000000000000002 /* GPSQuiz */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000001 /* GPSQuizApp.swift */,
+				004000000000000000000003 /* Models */,
+				004000000000000000000004 /* Services */,
+				004000000000000000000005 /* Views */,
+				004000000000000000000006 /* Intents */,
+				004000000000000000000007 /* Resources */,
+				002000000000000000000012 /* GPSQuiz.entitlements */,
+			);
+			path = GPSQuiz;
+			sourceTree = "<group>";
+		};
+		004000000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000002 /* QuizModels.swift */,
+				002000000000000000000003 /* AppRoute.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		004000000000000000000004 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000004 /* LocationService.swift */,
+				002000000000000000000005 /* LeaderboardService.swift */,
+				002000000000000000000006 /* CheckpointImportService.swift */,
+				002000000000000000000014 /* TimeFormatter.swift */,
+				002000000000000000000016 /* SampleDataService.swift */,
+				002000000000000000000018 /* AIQuizGenerationService.swift */,
+				00200000000000000000001A /* CloudQuizService.swift */,
+				00200000000000000000001C /* QRCodeService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		004000000000000000000005 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000007 /* RootView.swift */,
+				002000000000000000000008 /* StartView.swift */,
+				002000000000000000000009 /* QuizEditorView.swift */,
+				00200000000000000000000A /* QuizDetailView.swift */,
+				00200000000000000000000B /* GameView.swift */,
+				00200000000000000000000C /* QuestionView.swift */,
+				00200000000000000000000D /* ResultView.swift */,
+				00200000000000000000000E /* LeaderboardView.swift */,
+				002000000000000000000015 /* CheckpointImportView.swift */,
+				002000000000000000000019 /* AIQuizGeneratorView.swift */,
+				00200000000000000000001B /* CourseMapPreview.swift */,
+				00200000000000000000001D /* QuizShareView.swift */,
+				002000000000000000000017 /* PreviewSupport.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		004000000000000000000006 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				00200000000000000000000F /* GPSQuizIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		004000000000000000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000010 /* Assets.xcassets */,
+				002000000000000000000011 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		004000000000000000000008 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				002000000000000000000013 /* GPSQuiz.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		005000000000000000000001 /* GPSQuiz */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00A000000000000000000002 /* Build configuration list for PBXNativeTarget "GPSQuiz" */;
+			buildPhases = (
+				006000000000000000000001 /* Sources */,
+				003000000000000000000001 /* Frameworks */,
+				007000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GPSQuiz;
+			productName = GPSQuiz;
+			productReference = 002000000000000000000013 /* GPSQuiz.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		008000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					005000000000000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 00A000000000000000000001 /* Build configuration list for PBXProject "GPSQuiz" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 004000000000000000000001;
+			productRefGroup = 004000000000000000000008 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				005000000000000000000001 /* GPSQuiz */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		007000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001000000000000000000010 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		006000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001000000000000000000001 /* GPSQuizApp.swift in Sources */,
+				001000000000000000000002 /* QuizModels.swift in Sources */,
+				001000000000000000000003 /* AppRoute.swift in Sources */,
+				001000000000000000000004 /* LocationService.swift in Sources */,
+				001000000000000000000005 /* LeaderboardService.swift in Sources */,
+				001000000000000000000006 /* CheckpointImportService.swift in Sources */,
+				001000000000000000000011 /* TimeFormatter.swift in Sources */,
+				001000000000000000000013 /* SampleDataService.swift in Sources */,
+				001000000000000000000015 /* AIQuizGenerationService.swift in Sources */,
+				001000000000000000000017 /* CloudQuizService.swift in Sources */,
+				001000000000000000000019 /* QRCodeService.swift in Sources */,
+				001000000000000000000007 /* RootView.swift in Sources */,
+				001000000000000000000008 /* StartView.swift in Sources */,
+				001000000000000000000009 /* QuizEditorView.swift in Sources */,
+				00100000000000000000000A /* QuizDetailView.swift in Sources */,
+				00100000000000000000000B /* GameView.swift in Sources */,
+				00100000000000000000000C /* QuestionView.swift in Sources */,
+				00100000000000000000000D /* ResultView.swift in Sources */,
+				00100000000000000000000E /* LeaderboardView.swift in Sources */,
+				00100000000000000000000F /* GPSQuizIntents.swift in Sources */,
+				001000000000000000000012 /* CheckpointImportView.swift in Sources */,
+				001000000000000000000016 /* AIQuizGeneratorView.swift in Sources */,
+				001000000000000000000018 /* CourseMapPreview.swift in Sources */,
+				00100000000000000000001A /* QuizShareView.swift in Sources */,
+				001000000000000000000014 /* PreviewSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		009000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		009000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		009000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = AZH5VFWLNB;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GPSQuiz/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GPSQuiz;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.luis.gpsquiz;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		009000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = GPSQuiz/GPSQuiz.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = AZH5VFWLNB;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GPSQuiz/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GPSQuiz;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.luis.gpsquiz;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		00A000000000000000000001 /* Build configuration list for PBXProject "GPSQuiz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				009000000000000000000001 /* Debug */,
+				009000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00A000000000000000000002 /* Build configuration list for PBXNativeTarget "GPSQuiz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				009000000000000000000003 /* Debug */,
+				009000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 008000000000000000000001 /* Project object */;
+}

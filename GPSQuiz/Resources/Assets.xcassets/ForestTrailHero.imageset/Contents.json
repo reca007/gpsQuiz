@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "forest-trail-hero.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

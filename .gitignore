@@ -1,0 +1,16 @@
+.DS_Store
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# Swift/Xcode build products
+.build/
+*.swiftpm/
+
+# Local secrets and generated files
+*.env
+*.local
