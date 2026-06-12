@@ -8,6 +8,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const DATA_FILE = process.env.DATA_FILE || join(__dirname, "data", "store.json");
 const APP_INSTALL_URL = process.env.APP_INSTALL_URL || process.env.TESTFLIGHT_URL || "";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+const AI_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const AI_RATE_LIMIT_REQUESTS = Math.max(1, Number(process.env.AI_RATE_LIMIT_REQUESTS || 12));
+const aiRequestWindows = new Map();
 
 const defaultStore = {
   quizzes: [],
@@ -36,6 +42,28 @@ function sendJSON(response, status, payload) {
     "Access-Control-Allow-Headers": "Content-Type"
   });
   response.end(JSON.stringify(payload));
+}
+
+function requestClientID(request) {
+  const forwarded = String(request.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim();
+  return forwarded || request.socket.remoteAddress || "unknown";
+}
+
+function consumeAIRateLimit(clientID) {
+  const now = Date.now();
+  const existing = aiRequestWindows.get(clientID) || [];
+  const active = existing.filter((timestamp) => now - timestamp < AI_RATE_LIMIT_WINDOW_MS);
+
+  if (active.length >= AI_RATE_LIMIT_REQUESTS) {
+    aiRequestWindows.set(clientID, active);
+    return false;
+  }
+
+  active.push(now);
+  aiRequestWindows.set(clientID, active);
+  return true;
 }
 
 function sendHTML(response, status, html) {
@@ -124,6 +152,78 @@ function sharePage({ quiz, requestURL }) {
     <a class="button" href="${escapeHTML(importURL)}">Öppna i GPSQuiz</a>
     ${installButton}
     <p class="small">Om inget händer behöver GPSQuiz vara installerad först. Läraren delar installationslänken via TestFlight. Quizlänk: ${canonicalURL}</p>
+  </main>
+</body>
+</html>`;
+}
+
+function privacyPage() {
+  return `<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integritetspolicy · GPSQuiz</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+    body { margin: 0; background: #070a0d; color: #f4f6f8; line-height: 1.6; }
+    main { width: min(90vw, 720px); margin: 0 auto; padding: 48px 0 80px; }
+    h1, h2 { line-height: 1.12; } h1 { font-size: 42px; } h2 { margin-top: 34px; }
+    p, li { color: #a8b0b8; } a { color: #7cff00; }
+    .badge { color: #070a0d; background: #7cff00; display: inline-block; padding: 7px 11px; border-radius: 999px; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="badge">GPSQUIZ</div>
+    <h1>Integritetspolicy</h1>
+    <p>Senast uppdaterad: 9 juni 2026.</p>
+
+    <h2>Vilka uppgifter behandlas?</h2>
+    <p>GPSQuiz kan lagra publicerade quiz, checkpoint-positioner, lag- och spelarnamn, antal rätta svar, sluttid och tidpunkt för avslutad runda. Uppgifterna används för att genomföra quiz och visa topplistan.</p>
+
+    <h2>Platsdata</h2>
+    <p>Appen använder enhetens plats medan en runda pågår för att avgöra när en fråga ska låsas upp. Spelarens aktuella GPS-position skickas inte till GPSQuiz-servern. En lärare kan däremot publicera de checkpoint-positioner som ingår i en quizbana.</p>
+
+    <h2>Delning och spårning</h2>
+    <p>GPSQuiz säljer inte personuppgifter, använder inte data för reklam och spårar inte användare mellan appar eller webbplatser. Backend-tjänsten körs hos Render för att dela quiz och resultat mellan deltagare.</p>
+
+    <h2>Lagring och borttagning</h2>
+    <p>Data sparas så länge den behövs för quizfunktionen och kan tas bort av tjänstens administratör. Undvik att använda fullständiga personnamn för elever; använd helst lagnamn eller förnamn.</p>
+
+    <h2>Barn och skolanvändning</h2>
+    <p>Vid användning i skolan ansvarar läraren eller skolan för att användningen följer lokala regler och att elever får relevant information. Appen kräver inte att eleven skapar ett konto.</p>
+
+    <h2>Kontakt</h2>
+    <p>Frågor om integritet eller begäran om borttagning kan skickas via <a href="/support">GPSQuiz support</a> eller projektets <a href="https://github.com/reca007/gpsQuiz/issues">supportformulär</a>.</p>
+  </main>
+</body>
+</html>`;
+}
+
+function supportPage() {
+  return `<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support · GPSQuiz</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #070a0d; color: #f4f6f8; }
+    main { width: min(88vw, 620px); padding: 30px; border: 1px solid #252c33; border-radius: 24px; background: #101418; }
+    h1 { font-size: 38px; margin: 0 0 12px; } p { color: #a8b0b8; line-height: 1.55; }
+    a { color: #7cff00; } .accent { color: #7cff00; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="accent">GPSQUIZ SUPPORT</div>
+    <h1>Hur kan vi hjälpa?</h1>
+    <p>Kontakta den lärare eller administratör som delade quizet om en bana, QR-kod eller spelrunda inte fungerar.</p>
+    <p>Vid tekniska problem: ange enhet, iOS-version, quizets namn och vad som hände. Dela aldrig lösenord eller känsliga elevuppgifter.</p>
+    <p><a href="https://github.com/reca007/gpsQuiz/issues">Skapa ett supportärende</a></p>
+    <p><a href="/health">Kontrollera serverstatus</a> · <a href="/privacy">Integritetspolicy</a></p>
   </main>
 </body>
 </html>`;
@@ -237,6 +337,206 @@ function topicFor(subject, gradeLevel, index) {
   return topics[index % topics.length];
 }
 
+function normalizedGenerationRequest(request) {
+  const questionCount = Math.max(1, Math.min(Number(request.questionCount || 6), 20));
+  const subjectAreas = Array.isArray(request.subjectAreas)
+    ? request.subjectAreas
+        .map((item) => String(item || "").trim())
+        .filter(Boolean)
+        .slice(0, 8)
+    : [];
+
+  return {
+    subject: String(request.subject || subjectAreas[0] || "Skolämne").trim().slice(0, 120),
+    subjectAreas: subjectAreas.length > 0 ? subjectAreas : [String(request.subject || "Skolämne").trim()],
+    gradeLevel: String(request.gradeLevel || "Högstadiet").trim().slice(0, 120),
+    placeName: String(request.placeName || "Skolgården").trim().slice(0, 160),
+    locationDescription: String(request.locationDescription || "").trim().slice(0, 800),
+    centerLatitude: Number(request.centerLatitude || 59.3293),
+    centerLongitude: Number(request.centerLongitude || 18.0686),
+    minutes: Math.max(5, Math.min(Number(request.minutes || 30), 180)),
+    questionCount,
+    activationRadiusMeters: Math.max(5, Math.min(Number(request.activationRadiusMeters || 60), 500)),
+    language: ["en", "sv", "es"].includes(request.language) ? request.language : "sv",
+    difficulty: ["easy", "medium", "hard"].includes(request.difficulty) ? request.difficulty : "medium",
+    teacherInstructions: String(request.teacherInstructions || "").trim().slice(0, 1200)
+  };
+}
+
+function languageName(language) {
+  return {
+    en: "English",
+    sv: "Swedish",
+    es: "Spanish"
+  }[language] || "Swedish";
+}
+
+function questionContentSchema(questionCount) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["questions"],
+    properties: {
+      questions: {
+        type: "array",
+        minItems: questionCount,
+        maxItems: questionCount,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "checkpointTitle",
+            "subject",
+            "category",
+            "question",
+            "options",
+            "correctAnswer",
+            "explanation"
+          ],
+          properties: {
+            checkpointTitle: { type: "string" },
+            subject: { type: "string" },
+            category: { type: "string" },
+            question: { type: "string" },
+            options: {
+              type: "array",
+              minItems: 4,
+              maxItems: 4,
+              items: { type: "string" }
+            },
+            correctAnswer: { type: "string" },
+            explanation: { type: "string" }
+          }
+        }
+      }
+    }
+  };
+}
+
+function extractResponseText(responsePayload) {
+  for (const output of responsePayload.output || []) {
+    for (const content of output.content || []) {
+      if (content.type === "output_text" && typeof content.text === "string") {
+        return content.text;
+      }
+    }
+  }
+  throw new Error("OpenAI response did not contain structured text");
+}
+
+function routeCoordinates(request) {
+  const radius = Math.max(80, Math.min(900, (request.minutes * 70) / (2 * Math.PI)));
+
+  return Array.from({ length: request.questionCount }, (_, index) => {
+    const angle = (index / request.questionCount) * Math.PI * 2;
+    return {
+      latitude: request.centerLatitude + (Math.cos(angle) * radius) / 111_320,
+      longitude: request.centerLongitude +
+        (Math.sin(angle) * radius) /
+          (111_320 * Math.cos(request.centerLatitude * Math.PI / 180))
+    };
+  });
+}
+
+function validateGeneratedQuestion(question) {
+  const options = Array.isArray(question.options)
+    ? question.options.map((option) => String(option).trim()).filter(Boolean)
+    : [];
+  const correctAnswer = String(question.correctAnswer || "").trim();
+
+  return String(question.question || "").trim().length >= 8 &&
+    options.length === 4 &&
+    new Set(options.map((option) => option.toLocaleLowerCase())).size === 4 &&
+    options.includes(correctAnswer);
+}
+
+export async function generateQuestionsWithOpenAI(rawRequest) {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const request = normalizedGenerationRequest(rawRequest);
+  const instructions = [
+    "You create accurate, age-appropriate multiple-choice questions for GPSQuiz CityWalk.",
+    `Write every user-facing field in ${languageName(request.language)}.`,
+    "Generate exactly the requested number of questions.",
+    "Each question must have exactly four plausible and distinct answer options.",
+    "correctAnswer must exactly match one item in options.",
+    "Vary cognitive skill, wording, category, and correct-option position.",
+    "Avoid trick questions, ambiguous wording, repeated facts, and duplicated questions.",
+    "Use the place context when educationally relevant, but never invent facts about the location.",
+    "Questions must be suitable for teacher review before publishing.",
+    "Do not include personal data, unsafe activities, advertising, or political persuasion."
+  ].join(" ");
+
+  const input = {
+    task: "Generate a varied GPS quiz route question set.",
+    route: {
+      placeName: request.placeName,
+      locationDescription: request.locationDescription,
+      checkpointCount: request.questionCount
+    },
+    education: {
+      primarySubject: request.subject,
+      subjects: request.subjectAreas,
+      gradeLevel: request.gradeLevel,
+      difficulty: request.difficulty,
+      language: request.language
+    },
+    teacherInstructions: request.teacherInstructions || "No additional instructions."
+  };
+
+  const apiResponse = await fetch(OPENAI_RESPONSES_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      instructions,
+      input: JSON.stringify(input),
+      max_output_tokens: 6_000,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "gpsquiz_questions",
+          strict: true,
+          schema: questionContentSchema(request.questionCount)
+        }
+      }
+    }),
+    signal: AbortSignal.timeout(45_000)
+  });
+
+  const responsePayload = await apiResponse.json();
+  if (!apiResponse.ok) {
+    const message = responsePayload?.error?.message || `OpenAI request failed (${apiResponse.status})`;
+    throw new Error(message);
+  }
+
+  const generated = JSON.parse(extractResponseText(responsePayload));
+  if (!Array.isArray(generated.questions) ||
+      generated.questions.length !== request.questionCount ||
+      !generated.questions.every(validateGeneratedQuestion)) {
+    throw new Error("OpenAI returned invalid question data");
+  }
+
+  const coordinates = routeCoordinates(request);
+  return generated.questions.map((question, index) => ({
+    name: String(question.checkpointTitle || `${request.placeName} ${index + 1}`).trim(),
+    latitude: coordinates[index].latitude,
+    longitude: coordinates[index].longitude,
+    activationRadiusMeters: request.activationRadiusMeters,
+    question: String(question.question).trim(),
+    options: question.options.map((option) => String(option).trim()),
+    correctAnswer: String(question.correctAnswer).trim(),
+    explanation: String(question.explanation).trim(),
+    subject: String(question.subject).trim(),
+    category: String(question.category).trim()
+  }));
+}
+
 async function route(request, response) {
   if (request.method === "OPTIONS") {
     sendJSON(response, 204, {});
@@ -247,12 +547,29 @@ async function route(request, response) {
   const publicURL = new URL(request.url, `${request.headers["x-forwarded-proto"] || "https"}://${request.headers.host}`);
 
   if (request.method === "GET" && url.pathname === "/") {
-    sendHTML(response, 200, `<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GPSQuiz API</title><body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:32px;line-height:1.5"><h1>GPSQuiz API</h1><p>Servern kör. Publicerade elevlänkar finns på <code>/q/&lt;quiz-id&gt;</code>.</p><p><a href="/health">Health check</a></p></body></html>`);
+    sendHTML(response, 200, `<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GPSQuiz API</title><body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:32px;line-height:1.5"><h1>GPSQuiz API</h1><p>Servern kör. Publicerade elevlänkar finns på <code>/q/&lt;quiz-id&gt;</code>.</p><p><a href="/health">Serverstatus</a> · <a href="/support">Support</a> · <a href="/privacy">Integritetspolicy</a></p></body></html>`);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/privacy") {
+    sendHTML(response, 200, privacyPage());
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/support") {
+    sendHTML(response, 200, supportPage());
     return;
   }
 
   if (request.method === "GET" && url.pathname === "/health") {
-    sendJSON(response, 200, { ok: true, service: "gpsquiz-api" });
+    sendJSON(response, 200, {
+      ok: true,
+      service: "gpsquiz-api",
+      ai: {
+        configured: Boolean(OPENAI_API_KEY),
+        model: OPENAI_MODEL
+      }
+    });
     return;
   }
 
@@ -333,19 +650,41 @@ async function route(request, response) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/ai/generate") {
+    if (!consumeAIRateLimit(requestClientID(request))) {
+      sendJSON(response, 429, {
+        error: "Too many AI generation requests. Try again later."
+      });
+      return;
+    }
+
     const payload = await readJSON(request);
-    sendJSON(response, 200, { questions: generatedQuestions(payload) });
+    try {
+      const questions = await generateQuestionsWithOpenAI(payload);
+      sendJSON(response, 200, {
+        questions,
+        generationMode: "openai",
+        model: OPENAI_MODEL
+      });
+    } catch (error) {
+      console.error("AI generation fallback:", error.message);
+      sendJSON(response, 200, {
+        questions: generatedQuestions(payload),
+        generationMode: "local-fallback"
+      });
+    }
     return;
   }
 
   sendJSON(response, 404, { error: "Not found" });
 }
 
-createServer((request, response) => {
-  route(request, response).catch((error) => {
-    console.error(error);
-    sendJSON(response, 500, { error: "Internal server error" });
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  createServer((request, response) => {
+    route(request, response).catch((error) => {
+      console.error(error);
+      sendJSON(response, 500, { error: "Internal server error" });
+    });
+  }).listen(PORT, () => {
+    console.log(`GPSQuiz API listening on ${PORT}`);
   });
-}).listen(PORT, () => {
-  console.log(`GPSQuiz API listening on ${PORT}`);
-});
+}
